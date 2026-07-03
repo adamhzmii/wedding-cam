@@ -6,7 +6,15 @@ export default function GalleryPage() {
   const { slug } = useParams()
   const [event, setEvent] = useState(null)
   const [photos, setPhotos] = useState([])
+  const [viewing, setViewing] = useState(null) // photo open in fullscreen
   const newIds = useRef(new Set()) // photos that arrived live get the develop animation
+
+  useEffect(() => {
+    if (!viewing) return
+    const onKey = (e) => e.key === 'Escape' && setViewing(null)
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [viewing])
 
   useEffect(() => {
     supabase
@@ -63,6 +71,7 @@ export default function GalleryPage() {
             <figure
               key={p.id}
               className={`polaroid tilt-${i % 4} ${newIds.current.has(p.id) ? 'develop' : ''}`}
+              onClick={() => setViewing(p)}
             >
               <img src={photoUrl(p.storage_path)} alt={`Photo by ${p.guest_name}`} loading="lazy" />
               <figcaption>{p.guest_name}</figcaption>
@@ -72,6 +81,17 @@ export default function GalleryPage() {
       )}
 
       <Link className="btn btn-ghost" to={`/${slug}`}>← Back to camera</Link>
+
+      {viewing && (
+        <div className="lightbox" onClick={() => setViewing(null)}>
+          <img
+            src={photoUrl(viewing.storage_path)}
+            alt={`Photo by ${viewing.guest_name}`}
+            onClick={(e) => e.stopPropagation()}
+          />
+          <p className="lightbox-caption">{viewing.guest_name}</p>
+        </div>
+      )}
     </div>
   )
 }

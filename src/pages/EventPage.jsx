@@ -19,7 +19,15 @@ export default function EventPage() {
   const [joined, setJoined] = useState(!!localStorage.getItem(`name:${slug}`))
   const [myShots, setMyShots] = useState(() => loadShots(slug))
   const [queue, setQueue] = useState([]) // uploads in flight
+  const [viewing, setViewing] = useState(null) // shot open in fullscreen
   const fileRef = useRef(null)
+
+  useEffect(() => {
+    if (!viewing) return
+    const onKey = (e) => e.key === 'Escape' && setViewing(null)
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [viewing])
 
   useEffect(() => {
     supabase
@@ -93,6 +101,7 @@ export default function EventPage() {
     const next = myShots.filter((s) => s.path !== shot.path)
     setMyShots(next)
     localStorage.setItem(`shots:${slug}`, JSON.stringify(next))
+    setViewing(null)
   }
 
   if (event === undefined) return <div className="page center-page"><p className="muted">Loading…</p></div>
@@ -179,7 +188,12 @@ export default function EventPage() {
               <div className="mini-grid">
                 {myShots.map((shot) => (
                   <div key={shot.path} className="mini-shot">
-                    <img src={photoUrl(shot.path)} alt="" loading="lazy" />
+                    <img
+                      src={photoUrl(shot.path)}
+                      alt=""
+                      loading="lazy"
+                      onClick={() => setViewing(shot)}
+                    />
                     {shot.id && (
                       <button
                         className="btn-delete-own"
@@ -200,6 +214,26 @@ export default function EventPage() {
             View the live gallery →
           </Link>
         </>
+      )}
+
+      {viewing && (
+        <div className="lightbox" onClick={() => setViewing(null)}>
+          <img
+            src={photoUrl(viewing.path)}
+            alt=""
+            onClick={(e) => e.stopPropagation()}
+          />
+          <div className="lightbox-actions" onClick={(e) => e.stopPropagation()}>
+            {viewing.id && (
+              <button className="btn btn-danger" onClick={() => deleteShot(viewing)}>
+                Delete this photo
+              </button>
+            )}
+            <button className="btn btn-ghost btn-ghost-light" onClick={() => setViewing(null)}>
+              Close
+            </button>
+          </div>
+        </div>
       )}
     </div>
   )
