@@ -49,6 +49,29 @@ export default function EventPage() {
       .then(({ data }) => setEvent(data && data.length ? data[0] : null))
   }, [slug])
 
+  // Reconcile remembered shots with the database: drop entries whose photo
+  // was deleted elsewhere (refunds the slot) and backfill missing ids from
+  // before the delete feature existed.
+  useEffect(() => {
+    const stored = loadShots(slug)
+    if (!stored.length) return
+    supabase
+      .from('photos')
+      .select('id, storage_path')
+      .in('storage_path', stored.map((s) => s.path))
+      .then(({ data }) => {
+        if (!data) return
+        const alive = new Map(data.map((r) => [r.storage_path, r.id]))
+        setMyShots((prev) => {
+          const next = prev
+            .filter((s) => alive.has(s.path))
+            .map((s) => ({ id: s.id || alive.get(s.path), path: s.path }))
+          localStorage.setItem(`shots:${slug}`, JSON.stringify(next))
+          return next
+        })
+      })
+  }, [slug])
+
   // Get this guest's secret token, creating it the first time it's needed.
   // Must not live only in join(): returning guests skip the join screen.
   function getToken() {
@@ -274,7 +297,7 @@ export default function EventPage() {
         </>
       )}
 
-      <p className="credit">Made with love by Adam and some others</p>
+      <p className="credit">Made with love by Adam and (some others)</p>
 
       {viewing !== null && myShots[viewing] && (
         <div
