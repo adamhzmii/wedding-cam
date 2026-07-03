@@ -118,10 +118,19 @@ export default function EventPage() {
       p_token: getToken(),
     })
     if (err) {
-      console.error(err)
-      setDeleteError('Could not delete that photo. Ask the host to remove it.')
-      setViewing(null)
-      return
+      // If the row is already gone (e.g. host removed it), treat as deleted
+      // so the thumbnail clears and the shot is refunded.
+      const { data: row } = await supabase
+        .from('photos')
+        .select('id')
+        .eq('id', shot.id)
+        .maybeSingle()
+      if (row) {
+        console.error(err)
+        setDeleteError('Could not delete that photo. Ask the host to remove it.')
+        setViewing(null)
+        return
+      }
     }
     const next = myShots.filter((s) => s.path !== shot.path)
     setMyShots(next)
