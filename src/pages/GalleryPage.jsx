@@ -6,15 +6,27 @@ export default function GalleryPage() {
   const { slug } = useParams()
   const [event, setEvent] = useState(null)
   const [photos, setPhotos] = useState([])
-  const [viewing, setViewing] = useState(null) // photo open in fullscreen
+  const [viewing, setViewing] = useState(null) // index of photo open in fullscreen
   const newIds = useRef(new Set()) // photos that arrived live get the develop animation
+  const touchX = useRef(null)
 
   useEffect(() => {
-    if (!viewing) return
-    const onKey = (e) => e.key === 'Escape' && setViewing(null)
+    if (viewing === null) return
+    const onKey = (e) => {
+      if (e.key === 'Escape') setViewing(null)
+      if (e.key === 'ArrowLeft') setViewing((v) => Math.max(0, v - 1))
+      if (e.key === 'ArrowRight') setViewing((v) => Math.min(photos.length - 1, v + 1))
+    }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [viewing])
+  }, [viewing, photos.length])
+
+  function onSwipe(endX) {
+    const dx = endX - touchX.current
+    if (Math.abs(dx) < 50) return
+    if (dx < 0) setViewing((v) => Math.min(photos.length - 1, v + 1))
+    else setViewing((v) => Math.max(0, v - 1))
+  }
 
   useEffect(() => {
     supabase
@@ -71,7 +83,7 @@ export default function GalleryPage() {
             <figure
               key={p.id}
               className={`polaroid tilt-${i % 4} ${newIds.current.has(p.id) ? 'develop' : ''}`}
-              onClick={() => setViewing(p)}
+              onClick={() => setViewing(i)}
             >
               <img src={photoUrl(p.storage_path)} alt={`Photo by ${p.guest_name}`} loading="lazy" />
               <figcaption>{p.guest_name}</figcaption>
@@ -82,14 +94,37 @@ export default function GalleryPage() {
 
       <Link className="btn btn-ghost" to={`/${slug}`}>← Back to camera</Link>
 
-      {viewing && (
-        <div className="lightbox" onClick={() => setViewing(null)}>
+      {viewing !== null && photos[viewing] && (
+        <div
+          className="lightbox"
+          onClick={() => setViewing(null)}
+          onTouchStart={(e) => (touchX.current = e.touches[0].clientX)}
+          onTouchEnd={(e) => onSwipe(e.changedTouches[0].clientX)}
+        >
+          {viewing > 0 && (
+            <button
+              className="lightbox-nav lightbox-prev"
+              aria-label="Previous photo"
+              onClick={(e) => { e.stopPropagation(); setViewing(viewing - 1) }}
+            >
+              ‹
+            </button>
+          )}
           <img
-            src={photoUrl(viewing.storage_path)}
-            alt={`Photo by ${viewing.guest_name}`}
+            src={photoUrl(photos[viewing].storage_path)}
+            alt={`Photo by ${photos[viewing].guest_name}`}
             onClick={(e) => e.stopPropagation()}
           />
-          <p className="lightbox-caption">{viewing.guest_name}</p>
+          {viewing < photos.length - 1 && (
+            <button
+              className="lightbox-nav lightbox-next"
+              aria-label="Next photo"
+              onClick={(e) => { e.stopPropagation(); setViewing(viewing + 1) }}
+            >
+              ›
+            </button>
+          )}
+          <p className="lightbox-caption">{photos[viewing].guest_name}</p>
         </div>
       )}
     </div>

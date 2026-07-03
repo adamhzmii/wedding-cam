@@ -19,15 +19,28 @@ export default function EventPage() {
   const [joined, setJoined] = useState(!!localStorage.getItem(`name:${slug}`))
   const [myShots, setMyShots] = useState(() => loadShots(slug))
   const [queue, setQueue] = useState([]) // uploads in flight
-  const [viewing, setViewing] = useState(null) // shot open in fullscreen
+  const [viewing, setViewing] = useState(null) // index of shot open in fullscreen
   const fileRef = useRef(null)
+  const touchX = useRef(null)
 
   useEffect(() => {
-    if (!viewing) return
-    const onKey = (e) => e.key === 'Escape' && setViewing(null)
+    if (viewing === null) return
+    const onKey = (e) => {
+      if (e.key === 'Escape') setViewing(null)
+      if (e.key === 'ArrowLeft') setViewing((v) => Math.max(0, v - 1))
+      if (e.key === 'ArrowRight') setViewing((v) => Math.min(myShots.length - 1, v + 1))
+    }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [viewing])
+  }, [viewing, myShots.length])
+
+  function onSwipe(endX) {
+    const dx = endX - touchX.current
+    if (Math.abs(dx) < 50) return
+    // swipe left = next photo, swipe right = previous
+    if (dx < 0) setViewing((v) => Math.min(myShots.length - 1, v + 1))
+    else setViewing((v) => Math.max(0, v - 1))
+  }
 
   useEffect(() => {
     supabase
@@ -186,13 +199,13 @@ export default function EventPage() {
             <>
               <p className="section-label">Your shots</p>
               <div className="mini-grid">
-                {myShots.map((shot) => (
+                {myShots.map((shot, i) => (
                   <div key={shot.path} className="mini-shot">
                     <img
                       src={photoUrl(shot.path)}
                       alt=""
                       loading="lazy"
-                      onClick={() => setViewing(shot)}
+                      onClick={() => setViewing(i)}
                     />
                     {shot.id && (
                       <button
@@ -216,16 +229,39 @@ export default function EventPage() {
         </>
       )}
 
-      {viewing && (
-        <div className="lightbox" onClick={() => setViewing(null)}>
+      {viewing !== null && myShots[viewing] && (
+        <div
+          className="lightbox"
+          onClick={() => setViewing(null)}
+          onTouchStart={(e) => (touchX.current = e.touches[0].clientX)}
+          onTouchEnd={(e) => onSwipe(e.changedTouches[0].clientX)}
+        >
+          {viewing > 0 && (
+            <button
+              className="lightbox-nav lightbox-prev"
+              aria-label="Previous photo"
+              onClick={(e) => { e.stopPropagation(); setViewing(viewing - 1) }}
+            >
+              ‹
+            </button>
+          )}
           <img
-            src={photoUrl(viewing.path)}
+            src={photoUrl(myShots[viewing].path)}
             alt=""
             onClick={(e) => e.stopPropagation()}
           />
+          {viewing < myShots.length - 1 && (
+            <button
+              className="lightbox-nav lightbox-next"
+              aria-label="Next photo"
+              onClick={(e) => { e.stopPropagation(); setViewing(viewing + 1) }}
+            >
+              ›
+            </button>
+          )}
           <div className="lightbox-actions" onClick={(e) => e.stopPropagation()}>
-            {viewing.id && (
-              <button className="btn btn-danger" onClick={() => deleteShot(viewing)}>
+            {myShots[viewing].id && (
+              <button className="btn btn-danger" onClick={() => deleteShot(myShots[viewing])}>
                 Delete this photo
               </button>
             )}
