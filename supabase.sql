@@ -15,6 +15,7 @@ create table if not exists photos (
   event_slug text not null references events(slug) on delete cascade,
   guest_name text not null check (char_length(guest_name) between 1 and 40),
   storage_path text not null,
+  guest_token uuid,
   created_at timestamptz default now()
 );
 
@@ -53,19 +54,20 @@ as $$
   );
 $$;
 
--- Host-only delete (checks the key, removes DB row + storage object)
+-- Host-only delete (checks the key, removes the DB row).
+-- Note: the storage file is left behind on purpose. Supabase blocks SQL
+-- from deleting storage.objects directly; an orphaned file is invisible
+-- to the app (gallery, host page and zip all read from the photos table).
 create or replace function delete_photo(p_photo_id uuid, p_key text)
 returns void
-language plpgsql security definer set search_path = public, storage
+language plpgsql security definer set search_path = public
 as $$
 declare
-  v_path text;
   v_slug text;
 begin
-  select storage_path, event_slug into v_path, v_slug
-  from photos where id = p_photo_id;
+  select event_slug into v_slug from photos where id = p_photo_id;
 
-  if v_path is null then
+  if v_slug is null then
     raise exception 'photo not found';
   end if;
 
@@ -76,8 +78,24 @@ begin
   end if;
 
   delete from photos where id = p_photo_id;
-  delete from storage.objects
-    where bucket_id = 'wedding-photos' and name = v_path;
+end;
+$$;
+
+-- Guest self-delete (token must match the one saved on the guest's phone)
+create or replace function delete_own_photo(p_photo_id uuid, p_token uuid)
+returns void
+language plpgsql security definer set search_path = public
+as $$
+declare
+  v_token uuid;
+begin
+  select guest_token into v_token from photos where id = p_photo_id;
+
+  if v_token is null or p_token is null or v_token <> p_token then
+    raise exception 'not your photo';
+  end if;
+
+  delete from photos where id = p_photo_id;
 end;
 $$;
 

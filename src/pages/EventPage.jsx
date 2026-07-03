@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import imageCompression from 'browser-image-compression'
 import { supabase, BUCKET, photoUrl } from '../lib/supabase.js'
 
-const SHOT_LIMIT = 5
+const SHOT_LIMIT = 30
 
 function loadShots(slug) {
   const raw = JSON.parse(localStorage.getItem(`shots:${slug}`) || '[]')
