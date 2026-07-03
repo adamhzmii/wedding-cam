@@ -20,6 +20,7 @@ export default function EventPage() {
   const [myShots, setMyShots] = useState(() => loadShots(slug))
   const [queue, setQueue] = useState([]) // uploads in flight
   const [viewing, setViewing] = useState(null) // index of shot open in fullscreen
+  const [deleteError, setDeleteError] = useState('')
   const fileRef = useRef(null)
   const touchX = useRef(null)
 
@@ -48,20 +49,29 @@ export default function EventPage() {
       .then(({ data }) => setEvent(data && data.length ? data[0] : null))
   }, [slug])
 
+  // Get this guest's secret token, creating it the first time it's needed.
+  // Must not live only in join(): returning guests skip the join screen.
+  function getToken() {
+    let t = localStorage.getItem(`token:${slug}`)
+    if (!t) {
+      t = crypto.randomUUID()
+      localStorage.setItem(`token:${slug}`, t)
+    }
+    return t
+  }
+
   function join(e) {
     e.preventDefault()
     const clean = name.trim().slice(0, 40)
     if (!clean) return
-    if (!localStorage.getItem(`token:${slug}`)) {
-      localStorage.setItem(`token:${slug}`, crypto.randomUUID())
-    }
+    getToken()
     localStorage.setItem(`name:${slug}`, clean)
     setName(clean)
     setJoined(true)
   }
 
   async function handleFiles(fileList) {
-    const token = localStorage.getItem(`token:${slug}`)
+    const token = getToken()
     const files = Array.from(fileList).slice(0, SHOT_LIMIT - myShots.length)
     for (const file of files) {
       const tempId = crypto.randomUUID()
@@ -102,13 +112,15 @@ export default function EventPage() {
 
   async function deleteShot(shot) {
     if (!confirm('Remove this photo from the gallery?')) return
-    const token = localStorage.getItem(`token:${slug}`)
+    setDeleteError('')
     const { error: err } = await supabase.rpc('delete_own_photo', {
       p_photo_id: shot.id,
-      p_token: token,
+      p_token: getToken(),
     })
     if (err) {
       console.error(err)
+      setDeleteError('Could not delete that photo. Ask the host to remove it.')
+      setViewing(null)
       return
     }
     const next = myShots.filter((s) => s.path !== shot.path)
@@ -194,6 +206,7 @@ export default function EventPage() {
               {failed} upload{failed > 1 ? 's' : ''} failed. Check your connection and try again.
             </p>
           )}
+          {deleteError && <p className="status status-error">{deleteError}</p>}
 
           {myShots.length > 0 && (
             <>
