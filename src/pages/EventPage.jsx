@@ -50,9 +50,17 @@ export default function EventPage() {
   }
 
   useEffect(() => {
-    supabase
-      .rpc('get_event', { p_slug: slug })
-      .then(({ data }) => setEvent(data && data.length ? data[0] : null))
+    const fetchEvent = () =>
+      supabase
+        .rpc('get_event', { p_slug: slug })
+        .then(({ data, error: err }) => {
+          if (err) return
+          setEvent((prev) => (data && data.length ? data[0] : prev === undefined ? null : prev))
+        })
+    fetchEvent()
+    // Re-check every 30s so guests learn about a host pause/resume promptly
+    const timer = setInterval(fetchEvent, 30000)
+    return () => clearInterval(timer)
   }, [slug])
 
   // Reconcile remembered shots with the database: drop entries whose photo

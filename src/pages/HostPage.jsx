@@ -12,6 +12,7 @@ export default function HostPage() {
   const [photos, setPhotos] = useState([])
   const [zipping, setZipping] = useState(false)
   const [error, setError] = useState('')
+  const [pauseError, setPauseError] = useState('')
 
   const guestUrl = `${window.location.origin}/${slug}`
 
@@ -52,13 +53,19 @@ export default function HostPage() {
   }
 
   async function togglePause() {
+    setPauseError('')
     const paused = !event?.uploads_paused
     const { error: err } = await supabase.rpc('set_uploads_paused', {
       p_slug: slug,
       p_key: key,
       p_paused: paused,
     })
-    if (!err) setEvent((ev) => ({ ...ev, uploads_paused: paused }))
+    if (err) {
+      console.error(err)
+      setPauseError('Pause failed. The pause SQL has not been run in Supabase yet.')
+      return
+    }
+    setEvent((ev) => ({ ...ev, uploads_paused: paused }))
   }
 
   async function removePhoto(id) {
@@ -149,8 +156,11 @@ export default function HostPage() {
             {event?.uploads_paused ? '▶ Resume guest uploads' : '⏸ Pause guest uploads'}
           </button>
           {event?.uploads_paused && (
-            <p className="status">Guests cannot upload right now.</p>
+            <p className="status status-paused">
+              ⏸ Uploads are PAUSED. Guests cannot add photos until you resume.
+            </p>
           )}
+          {pauseError && <p className="status status-error">{pauseError}</p>}
         </div>
       </div>
 

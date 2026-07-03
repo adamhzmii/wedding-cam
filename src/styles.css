@@ -312,6 +312,7 @@ body {
 
 .status { text-align: center; color: var(--ink-soft); margin: 0; font-size: 14px; }
 .status-error { color: #a04226; }
+.status-paused { color: var(--burgundy); font-weight: 600; }
 
 /* ---------- polaroid gallery ---------- */
 .polaroid-grid {
