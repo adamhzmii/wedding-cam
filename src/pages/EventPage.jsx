@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import imageCompression from 'browser-image-compression'
-import { supabase, BUCKET, photoUrl } from '../lib/supabase.js'
+import { supabase, BUCKET, photoUrl, savePhoto } from '../lib/supabase.js'
 
 const SHOT_LIMIT = 30
 
@@ -241,6 +241,10 @@ export default function EventPage() {
           )}
           {deleteError && <p className="status status-error">{deleteError}</p>}
 
+          <Link className="btn btn-ghost" to={`/${slug}/gallery`}>
+            View the live gallery →
+          </Link>
+
           {myShots.length > 0 && (
             <>
               <p className="section-label">Your shots</p>
@@ -265,13 +269,8 @@ export default function EventPage() {
                   </div>
                 ))}
               </div>
-              <p className="thanks">Terima kasih! 💛</p>
             </>
           )}
-
-          <Link className="btn btn-ghost" to={`/${slug}/gallery`}>
-            View the live gallery →
-          </Link>
         </>
       )}
 
@@ -306,9 +305,15 @@ export default function EventPage() {
             </button>
           )}
           <div className="lightbox-actions" onClick={(e) => e.stopPropagation()}>
+            <button
+              className="btn btn-ghost btn-ghost-light"
+              onClick={() => savePhoto(myShots[viewing].path)}
+            >
+              ↓ Save
+            </button>
             {myShots[viewing].id && (
               <button className="btn btn-danger" onClick={() => deleteShot(myShots[viewing])}>
-                Delete this photo
+                Delete
               </button>
             )}
             <button className="btn btn-ghost btn-ghost-light" onClick={() => setViewing(null)}>

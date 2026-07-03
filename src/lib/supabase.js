@@ -18,3 +18,15 @@ export function photoUrl(storagePath) {
   const { data } = supabase.storage.from(BUCKET).getPublicUrl(storagePath)
   return data.publicUrl
 }
+
+// Download a photo to the user's device. Fetch as blob first because a
+// plain <a download> is ignored for cross-origin URLs.
+export async function savePhoto(storagePath) {
+  const res = await fetch(photoUrl(storagePath))
+  const blob = await res.blob()
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = storagePath.split('/').pop()
+  a.click()
+  URL.revokeObjectURL(a.href)
+}

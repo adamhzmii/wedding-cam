@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { supabase, photoUrl } from '../lib/supabase.js'
+import { supabase, photoUrl, savePhoto } from '../lib/supabase.js'
 
 export default function GalleryPage() {
   const { slug } = useParams()
@@ -135,6 +135,14 @@ export default function GalleryPage() {
             </button>
           )}
           <p className="lightbox-caption">{photos[viewing].guest_name}</p>
+          <div className="lightbox-actions" onClick={(e) => e.stopPropagation()}>
+            <button
+              className="btn btn-ghost btn-ghost-light"
+              onClick={() => savePhoto(photos[viewing].storage_path)}
+            >
+              ↓ Save
+            </button>
+          </div>
         </div>
       )}
     </div>
