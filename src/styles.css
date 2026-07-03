@@ -141,7 +141,7 @@ body {
 .btn-primary:hover { background: var(--emerald-deep); }
 .btn-primary:disabled { background: #b9c2ba; cursor: not-allowed; }
 
-.btn-big { font-size: 18px; padding: 20px; width: 100%; }
+.btn-big { padding: 20px; width: 100%; }
 
 .btn-ghost {
   background: transparent;
@@ -358,6 +358,17 @@ body {
 }
 
 .empty-card { align-items: center; text-align: center; }
+
+/* small credit line at the bottom of guest-facing pages */
+.credit {
+  margin: 28px 0 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 14px;
+  color: var(--ink-soft);
+  opacity: 0.8;
+}
 
 /* small round back button, top left of the gallery */
 .back-fab {

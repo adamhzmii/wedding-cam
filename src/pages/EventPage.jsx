@@ -222,7 +222,7 @@ export default function EventPage() {
           >
             {event.uploads_paused
               ? 'Uploads paused'
-              : shotsLeft > 0 ? '📸 Take / upload photos' : 'Film finished!'}
+              : shotsLeft > 0 ? 'Take / upload photos' : 'Film finished!'}
           </button>
 
           {event.uploads_paused && (
@@ -273,6 +273,8 @@ export default function EventPage() {
           )}
         </>
       )}
+
+      <p className="credit">Made by your cousin, with love</p>
 
       {viewing !== null && myShots[viewing] && (
         <div
