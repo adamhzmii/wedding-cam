@@ -5,6 +5,12 @@ import { supabase, BUCKET, photoUrl, savePhoto } from '../lib/supabase.js'
 
 const SHOT_LIMIT = 30
 
+// Falls back to the wedding date until event_date exists in the database
+export function formatDate(isoDate) {
+  const [y, m, d] = (isoDate || '2026-07-04').split('-')
+  return `${d}.${m}.${y.slice(2)}`
+}
+
 function loadShots(slug) {
   const raw = JSON.parse(localStorage.getItem(`shots:${slug}`) || '[]')
   // Old format was plain strings; migrate to {id, path} objects.
@@ -188,13 +194,7 @@ export default function EventPage() {
       <header className="event-header">
         <p className="eyebrow">Walimatul Urus</p>
         <h1 className="display">{event.couple_names}</h1>
-        {event.event_date && (
-          <p className="event-date">
-            {new Date(event.event_date).toLocaleDateString('en-GB', {
-              day: 'numeric', month: 'long', year: 'numeric',
-            })}
-          </p>
-        )}
+        <p className="event-date">{formatDate(event.event_date)}</p>
         <div className="gold-rule" />
       </header>
 

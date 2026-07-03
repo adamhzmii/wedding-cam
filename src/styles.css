@@ -3,6 +3,8 @@
   --sand: #f1eae0;
   --emerald: #2e5641;
   --emerald-deep: #23422f;
+  --maroon: #6f1d2b;
+  --maroon-deep: #571623;
   --gold: #c29b4a;
   --ink: #1e2a22;
   --ink-soft: #5c6a5f;
@@ -119,7 +121,7 @@ body {
   margin-bottom: 12px;
 }
 
-.input:focus { outline: 2px solid var(--emerald); outline-offset: 1px; }
+.input:focus { outline: 2px solid var(--maroon); outline-offset: 1px; }
 
 /* ---------- buttons ---------- */
 .btn {
@@ -137,16 +139,16 @@ body {
 
 .btn:active { transform: scale(0.98); }
 
-.btn-primary { background: var(--emerald); color: var(--ivory); }
-.btn-primary:hover { background: var(--emerald-deep); }
+.btn-primary { background: var(--maroon); color: var(--ivory); }
+.btn-primary:hover { background: var(--maroon-deep); }
 .btn-primary:disabled { background: #b9c2ba; cursor: not-allowed; }
 
 .btn-big { padding: 20px; width: 100%; }
 
 .btn-ghost {
   background: transparent;
-  color: var(--emerald);
-  border: 1px solid var(--emerald);
+  color: var(--maroon);
+  border: 1px solid var(--maroon);
 }
 
 .btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
@@ -383,7 +385,7 @@ body {
   border-radius: 50%;
   background: #fff;
   border: 1px solid var(--sand);
-  color: var(--emerald);
+  color: var(--maroon);
   font-size: 20px;
   line-height: 1;
   display: flex;
