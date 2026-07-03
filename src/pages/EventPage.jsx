@@ -98,9 +98,11 @@ export default function EventPage() {
           .single()
         if (dbErr) throw dbErr
 
-        const next = [...myShots, { id: inserted.id, path }].slice(0, SHOT_LIMIT)
-        setMyShots(next)
-        localStorage.setItem(`shots:${slug}`, JSON.stringify(next))
+        setMyShots((prev) => {
+          const next = [...prev, { id: inserted.id, path }].slice(0, SHOT_LIMIT)
+          localStorage.setItem(`shots:${slug}`, JSON.stringify(next))
+          return next
+        })
         setQueue((q) => q.filter((x) => x.id !== tempId))
       } catch (err) {
         console.error(err)
