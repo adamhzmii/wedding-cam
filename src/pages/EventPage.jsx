@@ -223,7 +223,7 @@ export default function EventPage() {
         <>
           <div className="counter-strip" aria-live="polite">
             <span className="counter-num">{String(shotsLeft).padStart(2, '0')}</span>
-            <span className="counter-label">shots left · {name}</span>
+            <span className="counter-label">shots left</span>
           </div>
 
           <input
