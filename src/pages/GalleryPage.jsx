@@ -65,6 +65,9 @@ export default function GalleryPage() {
 
   return (
     <div className="page page-wide">
+      <Link className="back-fab" to={`/${slug}`} aria-label="Back to camera">
+        ←
+      </Link>
       <header className="event-header">
         <p className="eyebrow">Live gallery</p>
         <h1 className="display">{event ? event.couple_names : '…'}</h1>
