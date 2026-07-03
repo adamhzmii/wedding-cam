@@ -68,6 +68,13 @@ export default function GalleryPage() {
       <header className="event-header">
         <p className="eyebrow">Live gallery</p>
         <h1 className="display">{event ? event.couple_names : '…'}</h1>
+        {event?.event_date && (
+          <p className="event-date">
+            {new Date(event.event_date).toLocaleDateString('en-GB', {
+              day: 'numeric', month: 'long', year: 'numeric',
+            })}
+          </p>
+        )}
         <div className="gold-rule" />
         <p className="muted">{photos.length} memories and counting</p>
       </header>

@@ -71,6 +71,16 @@ body {
 
 .event-header { display: flex; flex-direction: column; align-items: center; gap: 8px; }
 
+.event-date {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 19px;
+  color: var(--ink-soft);
+  letter-spacing: 0.05em;
+  margin: 2px 0 0;
+  text-align: center;
+}
+
 .gold-rule {
   width: 64px;
   height: 1px;
@@ -144,26 +154,27 @@ body {
 /* ---------- film counter ---------- */
 .counter-strip {
   display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 12px;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
   background: var(--ink);
   color: var(--ivory);
-  border-radius: 12px;
-  padding: 14px 18px;
+  border-radius: 14px;
+  padding: 20px 18px 16px;
+  text-align: center;
 }
 
 .counter-num {
   font-family: var(--font-display);
-  font-size: 40px;
+  font-size: 52px;
   line-height: 1;
   color: var(--gold);
   font-variant-numeric: tabular-nums;
 }
 
 .counter-label {
-  font-size: 13px;
-  letter-spacing: 0.08em;
+  font-size: 12px;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   opacity: 0.85;
 }

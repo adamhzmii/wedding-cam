@@ -7,6 +7,8 @@ create table if not exists events (
   slug text primary key,
   couple_names text not null,
   host_key text not null,
+  event_date date,
+  uploads_paused boolean not null default false,
   created_at timestamptz default now()
 );
 
@@ -30,18 +32,43 @@ alter table photos enable row level security;
 create policy "photos are public to read"
   on photos for select using (true);
 
+-- Inserts are blocked while the host has paused uploads. The check runs
+-- through a security definer function because events has no select policy.
+create or replace function uploads_allowed(p_slug text)
+returns boolean
+language sql security definer set search_path = public
+as $$
+  select not uploads_paused from events where slug = p_slug;
+$$;
+
 create policy "anyone can add a photo"
-  on photos for insert with check (true);
+  on photos for insert with check (uploads_allowed(event_slug));
 
 -- 3. Functions (these run with elevated rights, so they can
 --    see host_key without exposing it)
 
 -- Public event info (no host_key in the return!)
 create or replace function get_event(p_slug text)
-returns table (slug text, couple_names text)
+returns table (slug text, couple_names text, event_date date, uploads_paused boolean)
 language sql security definer set search_path = public
 as $$
-  select slug, couple_names from events where slug = p_slug;
+  select slug, couple_names, event_date, uploads_paused
+  from events where slug = p_slug;
+$$;
+
+-- Host-only pause/resume for guest uploads
+create or replace function set_uploads_paused(p_slug text, p_key text, p_paused boolean)
+returns void
+language plpgsql security definer set search_path = public
+as $$
+begin
+  if not exists (
+    select 1 from events where slug = p_slug and host_key = p_key
+  ) then
+    raise exception 'invalid host key';
+  end if;
+  update events set uploads_paused = p_paused where slug = p_slug;
+end;
 $$;
 
 -- Check a host key
@@ -117,5 +144,5 @@ create policy "anyone can upload wedding photos"
 
 -- 6. YOUR EVENT — edit this line, then run!
 -- slug becomes the URL: yourapp.vercel.app/aina-danish
-insert into events (slug, couple_names, host_key)
-values ('aqilah-farid', 'Aqilah & Farid', 'wmw4566whu');
+insert into events (slug, couple_names, host_key, event_date)
+values ('aqilah-farid', 'Aqilah & Farid', 'wmw4566whu', '2026-07-04');

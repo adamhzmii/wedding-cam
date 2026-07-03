@@ -51,6 +51,16 @@ export default function HostPage() {
     setPhotos(data || [])
   }
 
+  async function togglePause() {
+    const paused = !event?.uploads_paused
+    const { error: err } = await supabase.rpc('set_uploads_paused', {
+      p_slug: slug,
+      p_key: key,
+      p_paused: paused,
+    })
+    if (!err) setEvent((ev) => ({ ...ev, uploads_paused: paused }))
+  }
+
   async function removePhoto(id) {
     if (!confirm('Delete this photo for everyone?')) return
     const { error: err } = await supabase.rpc('delete_photo', {
@@ -135,6 +145,12 @@ export default function HostPage() {
             {zipping ? 'Preparing zip…' : 'Download all as .zip'}
           </button>
           <button className="btn btn-ghost" onClick={loadPhotos}>Refresh</button>
+          <button className="btn btn-ghost" onClick={togglePause}>
+            {event?.uploads_paused ? '▶ Resume guest uploads' : '⏸ Pause guest uploads'}
+          </button>
+          {event?.uploads_paused && (
+            <p className="status">Guests cannot upload right now.</p>
+          )}
         </div>
       </div>
 

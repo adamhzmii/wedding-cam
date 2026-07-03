@@ -71,6 +71,7 @@ export default function EventPage() {
   }
 
   async function handleFiles(fileList) {
+    if (event?.uploads_paused) return
     const token = getToken()
     const files = Array.from(fileList).slice(0, SHOT_LIMIT - myShots.length)
     for (const file of files) {
@@ -103,6 +104,12 @@ export default function EventPage() {
         setQueue((q) => q.filter((x) => x.id !== tempId))
       } catch (err) {
         console.error(err)
+        // 42501 = row level security rejected the insert: host paused uploads
+        if (err?.code === '42501') {
+          setEvent((ev) => ({ ...ev, uploads_paused: true }))
+          setQueue((q) => q.filter((x) => x.id !== tempId))
+          return
+        }
         setQueue((q) =>
           q.map((x) => (x.id === tempId ? { ...x, status: 'failed' } : x))
         )
@@ -156,6 +163,13 @@ export default function EventPage() {
       <header className="event-header">
         <p className="eyebrow">Walimatul Urus</p>
         <h1 className="display">{event.couple_names}</h1>
+        {event.event_date && (
+          <p className="event-date">
+            {new Date(event.event_date).toLocaleDateString('en-GB', {
+              day: 'numeric', month: 'long', year: 'numeric',
+            })}
+          </p>
+        )}
         <div className="gold-rule" />
       </header>
 
@@ -201,11 +215,19 @@ export default function EventPage() {
 
           <button
             className="btn btn-primary btn-big"
-            disabled={shotsLeft <= 0}
+            disabled={shotsLeft <= 0 || event.uploads_paused}
             onClick={() => fileRef.current.click()}
           >
-            {shotsLeft > 0 ? '📸 Take / upload photos' : 'Film finished!'}
+            {event.uploads_paused
+              ? 'Uploads paused'
+              : shotsLeft > 0 ? '📸 Take / upload photos' : 'Film finished!'}
           </button>
+
+          {event.uploads_paused && (
+            <p className="status">
+              The host has paused photo uploads for now. Hold tight!
+            </p>
+          )}
 
           {uploading > 0 && (
             <p className="status">Uploading {uploading} photo{uploading > 1 ? 's' : ''}…</p>
