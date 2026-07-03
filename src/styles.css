@@ -1,8 +1,12 @@
 :root {
-  --ivory: #fbf8f3;
-  --sand: #f1eae0;
+  --ivory: #eee4da; /* creme */
+  --sand: #d8c4ac;
   --emerald: #2e5641;
   --emerald-deep: #23422f;
+  --dusty: #c8a49f;
+  --dusty-deep: #b8908a;
+  --burgundy: #4d0e13;
+  --burgundy-deep: #3a0a0e;
   --gold: #c29b4a;
   --ink: #1e2a22;
   --ink-soft: #5c6a5f;
@@ -119,7 +123,7 @@ body {
   margin-bottom: 12px;
 }
 
-.input:focus { outline: 2px solid var(--emerald); outline-offset: 1px; }
+.input:focus { outline: 2px solid var(--burgundy); outline-offset: 1px; }
 
 /* ---------- buttons ---------- */
 .btn {
@@ -137,16 +141,16 @@ body {
 
 .btn:active { transform: scale(0.98); }
 
-.btn-primary { background: var(--emerald); color: var(--ivory); }
-.btn-primary:hover { background: var(--emerald-deep); }
-.btn-primary:disabled { background: #b9c2ba; cursor: not-allowed; }
+.btn-primary { background: var(--dusty); color: var(--burgundy); }
+.btn-primary:hover { background: var(--dusty-deep); }
+.btn-primary:disabled { background: #cfc0ba; color: #8a7a72; cursor: not-allowed; }
 
 .btn-big { padding: 20px; width: 100%; }
 
 .btn-ghost {
   background: transparent;
-  color: var(--emerald);
-  border: 1px solid var(--emerald);
+  color: var(--burgundy);
+  border: 1px solid var(--burgundy);
 }
 
 .btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
@@ -157,7 +161,7 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  background: var(--ink);
+  background: var(--burgundy);
   color: var(--ivory);
   border-radius: 14px;
   padding: 22px 18px 18px;
@@ -383,7 +387,7 @@ body {
   border-radius: 50%;
   background: #fff;
   border: 1px solid var(--sand);
-  color: var(--emerald);
+  color: var(--burgundy);
   font-size: 20px;
   line-height: 1;
   display: flex;
