@@ -1,0 +1,103 @@
+-- ============================================================
+-- WEDDING CAM: run this whole file in Supabase SQL Editor
+-- ============================================================
+
+-- 1. Tables
+create table if not exists events (
+  slug text primary key,
+  couple_names text not null,
+  host_key text not null,
+  created_at timestamptz default now()
+);
+
+create table if not exists photos (
+  id uuid primary key default gen_random_uuid(),
+  event_slug text not null references events(slug) on delete cascade,
+  guest_name text not null check (char_length(guest_name) between 1 and 40),
+  storage_path text not null,
+  created_at timestamptz default now()
+);
+
+-- 2. Row Level Security
+alter table events enable row level security;
+alter table photos enable row level security;
+
+-- events: NO select policy on purpose. host_key must never leak to browsers.
+-- Event info is read through the get_event() function below instead.
+
+-- photos: anyone can view and add, nobody can edit/delete directly
+create policy "photos are public to read"
+  on photos for select using (true);
+
+create policy "anyone can add a photo"
+  on photos for insert with check (true);
+
+-- 3. Functions (these run with elevated rights, so they can
+--    see host_key without exposing it)
+
+-- Public event info (no host_key in the return!)
+create or replace function get_event(p_slug text)
+returns table (slug text, couple_names text)
+language sql security definer set search_path = public
+as $$
+  select slug, couple_names from events where slug = p_slug;
+$$;
+
+-- Check a host key
+create or replace function verify_host(p_slug text, p_key text)
+returns boolean
+language sql security definer set search_path = public
+as $$
+  select exists (
+    select 1 from events where slug = p_slug and host_key = p_key
+  );
+$$;
+
+-- Host-only delete (checks the key, removes DB row + storage object)
+create or replace function delete_photo(p_photo_id uuid, p_key text)
+returns void
+language plpgsql security definer set search_path = public, storage
+as $$
+declare
+  v_path text;
+  v_slug text;
+begin
+  select storage_path, event_slug into v_path, v_slug
+  from photos where id = p_photo_id;
+
+  if v_path is null then
+    raise exception 'photo not found';
+  end if;
+
+  if not exists (
+    select 1 from events where slug = v_slug and host_key = p_key
+  ) then
+    raise exception 'invalid host key';
+  end if;
+
+  delete from photos where id = p_photo_id;
+  delete from storage.objects
+    where bucket_id = 'wedding-photos' and name = v_path;
+end;
+$$;
+
+-- 4. Realtime (so the gallery updates live)
+alter publication supabase_realtime add table photos;
+
+-- 5. Storage bucket + policies
+insert into storage.buckets (id, name, public)
+values ('wedding-photos', 'wedding-photos', true)
+on conflict (id) do nothing;
+
+create policy "public read wedding photos"
+  on storage.objects for select
+  using (bucket_id = 'wedding-photos');
+
+create policy "anyone can upload wedding photos"
+  on storage.objects for insert
+  with check (bucket_id = 'wedding-photos');
+
+-- 6. YOUR EVENT — edit this line, then run!
+-- slug becomes the URL: yourapp.vercel.app/aina-danish
+insert into events (slug, couple_names, host_key)
+values ('aqilah-farid', 'Aqilah & Farid', 'wmw4566whu');

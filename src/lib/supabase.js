@@ -1,0 +1,20 @@
+import { createClient } from '@supabase/supabase-js'
+
+const url = import.meta.env.VITE_SUPABASE_URL
+const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+if (!url || !anonKey) {
+  console.error(
+    '[supabase] Missing env vars. Check .env has VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY, then restart the dev server.'
+  )
+}
+
+export const supabase = createClient(url, anonKey)
+
+export const BUCKET = 'wedding-photos'
+
+// Build the public URL for a stored photo
+export function photoUrl(storagePath) {
+  const { data } = supabase.storage.from(BUCKET).getPublicUrl(storagePath)
+  return data.publicUrl
+}
