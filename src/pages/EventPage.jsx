@@ -242,7 +242,7 @@ export default function EventPage() {
           {deleteError && <p className="status status-error">{deleteError}</p>}
 
           <Link className="btn btn-ghost" to={`/${slug}/gallery`}>
-            View the live gallery →
+            View the live gallery
           </Link>
 
           {myShots.length > 0 && (
