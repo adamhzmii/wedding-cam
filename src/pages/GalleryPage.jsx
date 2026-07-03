@@ -104,7 +104,7 @@ export default function GalleryPage() {
 
       <Link className="btn btn-ghost" to={`/${slug}`}>← Back to camera</Link>
 
-      <p className="credit">Made by your cousin, with love</p>
+      <p className="credit">Made with love by Adam (some others)</p>
 
       {viewing !== null && photos[viewing] && (
         <div
