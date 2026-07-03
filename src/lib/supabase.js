@@ -19,14 +19,29 @@ export function photoUrl(storagePath) {
   return data.publicUrl
 }
 
-// Download a photo to the user's device. Fetch as blob first because a
-// plain <a download> is ignored for cross-origin URLs.
+// Save a photo to the user's device. Browsers cannot write into the photo
+// gallery directly, so on phones we open the native share sheet (its
+// "Save Image" option stores to the gallery). Desktop falls back to a
+// normal download; the blob fetch is needed because a plain <a download>
+// is ignored for cross-origin URLs.
 export async function savePhoto(storagePath) {
   const res = await fetch(photoUrl(storagePath))
   const blob = await res.blob()
+  const file = new File([blob], storagePath.split('/').pop(), { type: 'image/jpeg' })
+
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file] })
+      return
+    } catch (err) {
+      if (err.name === 'AbortError') return // user closed the share sheet
+      // any other failure: fall through to download
+    }
+  }
+
   const a = document.createElement('a')
   a.href = URL.createObjectURL(blob)
-  a.download = storagePath.split('/').pop()
+  a.download = file.name
   a.click()
   URL.revokeObjectURL(a.href)
 }

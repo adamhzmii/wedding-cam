@@ -274,7 +274,7 @@ export default function EventPage() {
         </>
       )}
 
-      <p className="credit">Made with love by Adam (some others)</p>
+      <p className="credit">Made with love by Adam and some others</p>
 
       {viewing !== null && myShots[viewing] && (
         <div
